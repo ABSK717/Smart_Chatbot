@@ -16,8 +16,8 @@ def save_responses(responses, file_path='responses.json'):
     with open(file_path, 'w') as file:
         json.dump(responses, file, indent=4)
 
-# Find the closest match with at least 60% similarity
-def find_best_match(query, responses, threshold=0.6):
+# Find the closest match with at least 90% similarity
+def find_best_match(query, responses, threshold=0.90):
     best_match = None
     best_score = 0
     for stored_query in responses:
@@ -47,7 +47,7 @@ def chatbot():
         if user_input.lower() == '!exit' or user_input.lower() == '!bye':
             print("Chatbot: Goodbye!")
             break
-        elif user_input.lower() == 'show learned responses':
+        elif user_input.lower() == 'show what you learned' or user_input.lower()=="!show responses":
             display_learned_responses(responses)
             continue
         
@@ -61,7 +61,7 @@ def chatbot():
             print(f"Chatbot: {response}")
         else:
             print("Chatbot: I don't know the answer. Can you tell me?")
-            user_response = input("Your answer: ")
+            user_response = input(f"how to respond to '{user_input}'\nType Answer here: ")
             
             # If the query already exists, append the new response
             if user_input in responses:
