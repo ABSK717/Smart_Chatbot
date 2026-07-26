@@ -16,16 +16,42 @@ def save_responses(responses, file_path='responses.json'):
     with open(file_path, 'w') as file:
         json.dump(responses, file, indent=4)
 
-# Find the closest match with at least 90% similarity
+# Get word overlap similarity Score
+def word_similarity(a, b):
+    a = set(a.lower().split())
+    b = set(b.lower().split())
+    return len(a & b) / len(a | b)
+
+# Find the most similar stored query using a hybrid similarity approach.
 def find_best_match(query, responses, threshold=0.90):
-    best_match = None
-    best_score = 0
+
+    scores = []
+    # Score every stored query
     for stored_query in responses:
-        score = SequenceMatcher(None, query, stored_query).ratio()
-        if score > best_score and score >= threshold:
-            best_match = stored_query
-            best_score = score
-    return best_match
+        # Character-level similarity
+        fuzzy_match_score = SequenceMatcher(None, query, stored_query).ratio()
+        # Word-level similarity
+        word_match_score = word_similarity(query, stored_query)
+        # Hybrid similarity score
+        final_score = ( 0.5 * fuzzy_match_score + 0.5 * word_match_score )
+        scores.append((stored_query, final_score))
+
+    # No learned responses available
+    if not scores:
+        return None
+
+    # Rank matches from highest to lowest confidence
+    scores.sort(key=lambda x: x[1], reverse=True)
+    best_match, best_score = scores[0] # pick top match with highest score
+
+    # Return the best match only if it passes the confidence threshold
+    if best_score >= threshold:
+        print(f"Best match: '{best_match}' ({best_score:.2f})")
+        return best_match
+
+    # No match is confident enough
+    return None
+   
 
 # Display all learned responses
 def display_learned_responses(responses):
@@ -65,7 +91,7 @@ def chatbot():
             
             # If the query already exists, append the new response
             if user_input in responses:
-                responses[user_input].append(user_response)
+                responses[user_input].append(user_response.lower())
             else:
                 responses[user_input] = [user_response]
             
